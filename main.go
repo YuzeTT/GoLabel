@@ -35,5 +35,5 @@ func main() {
 	}
 	dc.DrawString("101001", 88, float64(image_size.height)-83)
 
-	dc.SavePNG("output.png")
+	dc.SavePNG("output/output.png")
 }
