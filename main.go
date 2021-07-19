@@ -1,26 +1,89 @@
 package main
 
-import "github.com/fogleman/gg"
+import (
+	"fmt"
+	"os"
+	"strings"
+
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/fogleman/gg"
+)
 
 type image_size struct {
 	width  int
 	height int
 }
 
+type model struct {
+	cursor int
+	choice chan string
+}
+
+var choices = []string{"Taro", "Coffee", "Lychee"}
+
+func (m model) Init() tea.Cmd {
+	return nil
+}
+
+func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "ctrl+c", "q", "esc":
+			close(m.choice) // If we're quitting just close the channel.
+			return m, tea.Quit
+
+		case "enter":
+			// Send the choice on the channel and exit.
+			m.choice <- choices[m.cursor]
+			return m, tea.Quit
+
+		case "down", "j":
+			m.cursor++
+			if m.cursor >= len(choices) {
+				m.cursor = 0
+			}
+
+		case "up", "k":
+			m.cursor--
+			if m.cursor < 0 {
+				m.cursor = len(choices) - 1
+			}
+		}
+
+	}
+
+	return m, nil
+}
+
+func (m model) View() string {
+	s := strings.Builder{}
+	s.WriteString("What kind of Bubble Tea would you like to order?\n\n")
+
+	for i := 0; i < len(choices); i++ {
+		if m.cursor == i {
+			s.WriteString("(x) ")
+		} else {
+			s.WriteString("( ) ")
+		}
+		s.WriteString(choices[i])
+		s.WriteString("\n")
+	}
+	s.WriteString("\n(向下：j/↓ 向上：k/↑ 确定：enter)\n")
+
+	return s.String()
+}
+
 func main() {
-	// // 创建一个code128编码的 BarcodeIntCS
+	// 生成条形码
 	// cs, _ := code128.Encode("A1001")
-	// // 创建一个要输出数据的文件
 	// file, _ := os.Create("qr3.png")
 	// defer file.Close()
-
-	// // 设置图片像素大小
 	// qrCode, _ := barcode.Scale(cs, 350, 70)
-	// // 将code128的条形码编码为png图片
 	// png.Encode(file, qrCode)
 	image_size := image_size{width: 480, height: 200}
 	// dc := gg.NewContext(image_size.width, image_size.height)
-	im, err := gg.LoadImage("./标签.png")
+	im, err := gg.LoadImage("./template/dark.png")
 	if err != nil {
 		panic(err)
 	}
@@ -30,10 +93,29 @@ func main() {
 	dc.DrawImage(im, 0, 0)
 
 	dc.SetRGB(1, 1, 1)
-	if err := dc.LoadFontFace("font/优设标题黑.ttf", 185); err != nil {
+	if err := dc.LoadFontFace("font/Alibaba-PuHuiTi-Bold.ttf", 180); err != nil {
 		panic(err)
 	}
-	dc.DrawString("101001", 88, float64(image_size.height)-83)
+	dc.DrawString("A00111", 83, float64(image_size.height)-83)
 
 	dc.SavePNG("output/output.png")
+
+	// ====== 下方为测试代码，未清空推送dev分支 ======
+
+	// This is where we'll listen for the choice the user makes in the Bubble
+	// Tea program.
+	result := make(chan string, 1)
+
+	// Pass the channel to the initialize function so our Bubble Tea program
+	// can send the final choice along when the time comes.
+	p := tea.NewProgram(model{cursor: 0, choice: result})
+	if err := p.Start(); err != nil {
+		fmt.Println("Oh no:", err)
+		os.Exit(1)
+	}
+
+	// Print out the final choice.
+	if r := <-result; r != "" {
+		fmt.Printf("\n---\nYou chose %s!\n", r)
+	}
 }
