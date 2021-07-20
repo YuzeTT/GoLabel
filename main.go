@@ -7,6 +7,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/fogleman/gg"
+	"github.com/gookit/color"
 )
 
 type image_size struct {
@@ -19,7 +20,7 @@ type model struct {
 	choice chan string
 }
 
-var choices = []string{"Taro", "Coffee", "Lychee"}
+var choices = []string{"创建数字标签", "查询标签"}
 
 func (m model) Init() tea.Cmd {
 	return nil
@@ -58,29 +59,23 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m model) View() string {
 	s := strings.Builder{}
-	s.WriteString("What kind of Bubble Tea would you like to order?\n\n")
+	s.WriteString("选择操作\n")
 
 	for i := 0; i < len(choices); i++ {
 		if m.cursor == i {
-			s.WriteString("(x) ")
+			s.WriteString("> ")
 		} else {
-			s.WriteString("( ) ")
+			s.WriteString("  ")
 		}
 		s.WriteString(choices[i])
 		s.WriteString("\n")
 	}
-	s.WriteString("\n(向下：j/↓ 向上：k/↑ 确定：enter)\n")
+	s.WriteString("\n(向下：j/↓ 向上：k/↑ 确定：enter 退出：ESC/q)\n")
 
 	return s.String()
 }
 
-func main() {
-	// 生成条形码
-	// cs, _ := code128.Encode("A1001")
-	// file, _ := os.Create("qr3.png")
-	// defer file.Close()
-	// qrCode, _ := barcode.Scale(cs, 350, 70)
-	// png.Encode(file, qrCode)
+func createLabel(text string) {
 	image_size := image_size{width: 480, height: 200}
 	// dc := gg.NewContext(image_size.width, image_size.height)
 	im, err := gg.LoadImage("./template/dark.png")
@@ -96,9 +91,26 @@ func main() {
 	if err := dc.LoadFontFace("font/Alibaba-PuHuiTi-Bold.ttf", 180); err != nil {
 		panic(err)
 	}
-	dc.DrawString("A00111", 83, float64(image_size.height)-83)
+	dc.DrawString(text, 83, float64(image_size.height)-83)
 
 	dc.SavePNG("output/output.png")
+}
+
+func main() {
+	// color.Style{color.FgBlack, color.BgBlue}.Println("         ")
+	// color.Style{color.FgBlack, color.BgBlue}.Println(" GoTabel ")
+
+	s := color.S256(231, 27)
+	s.SetOpts(color.Opts{color.OpBold})
+	s.Println(" GoTabel v.0.1.0 ")
+	println("By: YuzeTT ")
+	fmt.Println()
+	// 生成条形码
+	// cs, _ := code128.Encode("A1001")
+	// file, _ := os.Create("qr3.png")
+	// defer file.Close()
+	// qrCode, _ := barcode.Scale(cs, 350, 70)
+	// png.Encode(file, qrCode)
 
 	// ====== 下方为测试代码，未清空推送dev分支 ======
 
@@ -116,6 +128,15 @@ func main() {
 
 	// Print out the final choice.
 	if r := <-result; r != "" {
-		fmt.Printf("\n---\nYou chose %s!\n", r)
+		fmt.Printf("\n---\n正在加载 %s...\n", r)
+		switch r {
+		case "创建数字标签":
+			fmt.Print("请输入要创建的识别码（1-6位英文/数字）：")
+			var text string
+			fmt.Scanln(&text)
+			createLabel(text)
+		case "查询标签":
+			fmt.Println("\n功能尚未完成")
+		}
 	}
 }
