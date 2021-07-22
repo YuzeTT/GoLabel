@@ -78,7 +78,7 @@ func (m model) View() string {
 func createLabel(text string) {
 	image_size := image_size{width: 480, height: 200}
 	// dc := gg.NewContext(image_size.width, image_size.height)
-	im, err := gg.LoadImage("./template/dark.png")
+	im, err := gg.LoadImage("./template/dark-4.png")
 	if err != nil {
 		panic(err)
 	}
@@ -88,10 +88,10 @@ func createLabel(text string) {
 	dc.DrawImage(im, 0, 0)
 
 	dc.SetRGB(1, 1, 1)
-	if err := dc.LoadFontFace("font/Alibaba-PuHuiTi-Bold.ttf", 180); err != nil {
+	if err := dc.LoadFontFace("font/Alibaba-PuHuiTi-Bold.ttf", 190); err != nil {
 		panic(err)
 	}
-	dc.DrawString(text, 83, float64(image_size.height)-83)
+	dc.DrawString(text, 80, float64(image_size.height)-75)
 
 	dc.SavePNG("output/output.png")
 }
@@ -114,29 +114,24 @@ func main() {
 
 	// ====== 下方为测试代码，未清空推送dev分支 ======
 
-	// This is where we'll listen for the choice the user makes in the Bubble
-	// Tea program.
-	result := make(chan string, 1)
-
-	// Pass the channel to the initialize function so our Bubble Tea program
-	// can send the final choice along when the time comes.
-	p := tea.NewProgram(model{cursor: 0, choice: result})
-	if err := p.Start(); err != nil {
-		fmt.Println("Oh no:", err)
-		os.Exit(1)
-	}
-
 	// Print out the final choice.
-	if r := <-result; r != "" {
-		fmt.Printf("\n---\n正在加载 %s...\n", r)
-		switch r {
-		case "创建数字标签":
-			fmt.Print("请输入要创建的识别码（1-6位英文/数字）：")
-			var text string
-			fmt.Scanln(&text)
-			createLabel(text)
-		case "查询标签":
-			fmt.Println("\n功能尚未完成")
-		}
+	fmt.Println("-----------------\n1. 创建四位数标签\n2. 查询标签(未完成)\nf. 进入批量创建(未完成)\nq. 退出程序")
+	fmt.Printf("-----------------\n请选择：")
+	var selectMode string
+	fmt.Scanln(&selectMode)
+	switch selectMode {
+	case "1":
+		fmt.Print("请输入要创建的识别码（1-6位英文/数字）：")
+		var text string
+		fmt.Scanln(&text)
+		createLabel(text)
+	case "2":
+		fmt.Println("\n功能尚未完成")
+	case "f":
+		os.Exit(0)
+	case "q":
+		os.Exit(0)
+	default:
+		fmt.Print("未找到序号，请重试。\n\n")
 	}
 }
